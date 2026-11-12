@@ -1,0 +1,47 @@
+name: Inspect Rei-Yue sample archive
+on:
+  push:
+    branches:
+      - inspect-reiyue-sample
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect archive without executing its contents
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import zipfile, pathlib
+          p = pathlib.Path("Rei-Yue-Rev11-NoCrates-InjectorFix-Vietnamese.zip")
+          print("ARCHIVE:", p.name, "BYTES:", p.stat().st_size)
+          with zipfile.ZipFile(p) as z:
+              bad = z.testzip()
+              print("ZIP_TEST:", bad or "OK")
+              infos = z.infolist()
+              print("ENTRY_COUNT:", len(infos))
+              for i in infos:
+                  print("ENTRY:", i.filename, "SIZE:", i.file_size)
+              exts = {".json",".xml",".cs",".txt",".md",".yml",".yaml",".csv",".pss",".psscript",".psui",".toml",".config"}
+              total = 0
+              for i in infos:
+                  name = pathlib.PurePosixPath(i.filename).name
+                  ext = pathlib.PurePosixPath(i.filename).suffix.lower()
+                  if i.is_dir() or ext not in exts or i.file_size > 12000:
+                      continue
+                  data = z.read(i.filename)
+                  try:
+                      content = data.decode("utf-8-sig")
+                  except UnicodeDecodeError:
+                      continue
+                  remain = 42000 - total
+                  if remain <= 0:
+                      print("CONTENT_LIMIT_REACHED")
+                      break
+                  content = content[:min(9000, remain)]
+                  print("\\n===== FILE:", i.filename, "=====")
+                  print(content)
+                  total += len(content)
+          PY
