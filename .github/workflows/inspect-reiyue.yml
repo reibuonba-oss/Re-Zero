@@ -16,32 +16,35 @@ jobs:
           python3 - <<'PY'
           import zipfile, pathlib
           p = pathlib.Path("Rei-Yue-Rev11-NoCrates-InjectorFix-Vietnamese.zip")
-          print("ARCHIVE:", p.name, "BYTES:", p.stat().st_size)
           with zipfile.ZipFile(p) as z:
-              bad = z.testzip()
-              print("ZIP_TEST:", bad or "OK")
-              infos = z.infolist()
-              print("ENTRY_COUNT:", len(infos))
-              for i in infos:
-                  print("ENTRY:", i.filename, "SIZE:", i.file_size)
-              exts = {".json",".xml",".cs",".txt",".md",".yml",".yaml",".csv",".pss",".psscript",".psui",".toml",".config"}
-              total = 0
-              for i in infos:
-                  name = pathlib.PurePosixPath(i.filename).name
-                  ext = pathlib.PurePosixPath(i.filename).suffix.lower()
-                  if i.is_dir() or ext not in exts or i.file_size > 12000:
-                      continue
-                  data = z.read(i.filename)
-                  try:
-                      content = data.decode("utf-8-sig")
-                  except UnicodeDecodeError:
-                      continue
-                  remain = 42000 - total
-                  if remain <= 0:
-                      print("CONTENT_LIMIT_REACHED")
-                      break
-                  content = content[:min(9000, remain)]
-                  print("\\n===== FILE:", i.filename, "=====")
-                  print(content)
-                  total += len(content)
+              z.extractall("/tmp/rei-yue")
+              print("ZIP_TEST:", z.testzip() or "OK")
+              print("ENTRIES:")
+              for i in z.infolist():
+                  print(i.filename, i.file_size)
+              for path in ("manifest.xml", "Localization/vi.csv"):
+                  f = pathlib.Path("/tmp/rei-yue") / path
+                  if f.exists():
+                      print("\\n===== ", path, " =====")
+                      print(f.read_text(encoding="utf-8-sig"))
+          PY
+      - name: Decompile sample NPC assembly
+        shell: bash
+        run: |
+          dotnet tool install ilspycmd --tool-path /tmp/ilspy
+          /tmp/ilspy/ilspycmd -p -o /tmp/rei-decompiled /tmp/rei-yue/ReiNPC.dll
+          python3 - <<'PY'
+          import pathlib
+          files = sorted(pathlib.Path("/tmp/rei-decompiled").rglob("*.cs"))
+          print("DECOMPILED_FILES:", len(files))
+          total = 0
+          for f in files:
+              content = f.read_text(encoding="utf-8", errors="replace")
+              remain = 45000 - total
+              if remain <= 0:
+                  print("DECOMPILE_OUTPUT_LIMIT_REACHED")
+                  break
+              print("\\n===== SOURCE:", f.relative_to("/tmp/rei-decompiled"), "=====")
+              print(content[:remain])
+              total += min(len(content), remain)
           PY
