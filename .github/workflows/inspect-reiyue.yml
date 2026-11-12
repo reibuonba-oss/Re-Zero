@@ -48,3 +48,21 @@ jobs:
               print(content[:remain])
               total += min(len(content), remain)
           PY
+
+      - name: Inspect Manager archive
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import zipfile, pathlib
+          p = pathlib.Path("Manager.zip")
+          print("MANAGER_ARCHIVE_BYTES:", p.stat().st_size)
+          with zipfile.ZipFile(p) as z:
+              print("MANAGER_ZIP_TEST:", z.testzip() or "OK")
+              print("MANAGER_ENTRY_COUNT:", len(z.infolist()))
+              for i in z.infolist():
+                  if i.is_dir():
+                      continue
+                  ext = pathlib.PurePosixPath(i.filename).suffix.lower()
+                  if ext in {".dll",".exe",".csproj",".sln",".cs",".xml",".json",".md",".yml",".yaml",".txt"}:
+                      print("MANAGER_ENTRY:", i.filename, i.file_size)
+          PY
