@@ -110,3 +110,11 @@ jobs:
           done
           echo "=== SAMPLE ASSEMBLY REFERENCES ==="
           /tmp/ilspy/ilspycmd -il /tmp/rei-yue/ReiNPC.dll | grep -E '^\.assembly extern|^\s+\.ver' | head -100 || true
+
+      - name: Inspect Rem localization and scheduling APIs
+        shell: bash
+        run: |
+          for TYPE in LocHelper ContactElement StorePhoneClient StoreClient StoreClientManager PlayerStore SpriteDict ModItemDirectory; do
+            echo "===== TYPE: $TYPE ====="
+            /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -260 || true
+          done
