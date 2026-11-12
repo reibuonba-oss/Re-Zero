@@ -1,0 +1,86 @@
+name: Build Rem Maid NPC
+on:
+  push:
+    branches:
+      - rem-npc-mod
+    paths:
+      - "RemMaidNPC/**"
+      - "Manager.zip"
+      - ".github/workflows/build-rem.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Extract supplied game reference assemblies
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, zipfile
+          archive = pathlib.Path("Manager.zip")
+          if not archive.is_file():
+              raise SystemExit("Manager.zip is missing from the repository root.")
+          with zipfile.ZipFile(archive) as z:
+              bad = z.testzip()
+              if bad:
+                  raise SystemExit(f"Corrupt entry in Manager.zip: {bad}")
+              z.extractall("lib")
+          expected = [
+              pathlib.Path("lib/Manager/Assembly-CSharp.dll"),
+              pathlib.Path("lib/Manager/0Harmony.dll"),
+              pathlib.Path("lib/Manager/UnityEngine.CoreModule.dll"),
+              pathlib.Path("lib/Manager/UnityEngine.dll"),
+          ]
+          missing = [str(p) for p in expected if not p.is_file()]
+          if missing:
+              raise SystemExit("Missing game reference assemblies: " + ", ".join(missing))
+          print("Game reference assemblies extracted and verified.")
+          PY
+      - name: Build Rem NPC
+        run: dotnet build RemMaidNPC/RemMaidNPC.csproj --configuration Release -p:GameManagedDir=../lib/Manager
+      - name: Assemble and validate mod package
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE="dist/RemMaidNPC-v1.0.0"
+          mkdir -p "$PACKAGE"
+          cp RemMaidNPC/manifest.xml "$PACKAGE/"
+          cp RemMaidNPC/bin/Release/netstandard2.1/RemMaidNPC.dll "$PACKAGE/"
+          cp -R RemMaidNPC/Localization "$PACKAGE/"
+          cp -R RemMaidNPC/Textures "$PACKAGE/"
+          cp RemMaidNPC/README.md "$PACKAGE/"
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          root = pathlib.Path("dist/RemMaidNPC-v1.0.0")
+          manifest = ET.parse(root / "manifest.xml").getroot()
+          assembly = manifest.findtext("./Assemblies/Assembly")
+          required = [
+              root / "RemMaidNPC.dll",
+              root / "Textures/rem.png",
+              root / "Textures/Items/rem_business_card.png",
+              root / "Localization/vi.csv",
+              root / "Localization/en.csv",
+          ]
+          missing = [str(p) for p in required if not p.is_file() or p.stat().st_size == 0]
+          if missing:
+              raise SystemExit("Package validation failed: " + ", ".join(missing))
+          if assembly != "RemMaidNPC.dll":
+              raise SystemExit("Manifest assembly does not match the built DLL.")
+          print("Manifest and all required mod assets validated.")
+          PY
+          cd dist
+          zip -qr RemMaidNPC-v1.0.0.zip RemMaidNPC-v1.0.0
+          unzip -t RemMaidNPC-v1.0.0.zip
+      - name: Upload built mod package
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemMaidNPC-v1.0.0
+          path: dist/RemMaidNPC-v1.0.0.zip
+          if-no-files-found: error
