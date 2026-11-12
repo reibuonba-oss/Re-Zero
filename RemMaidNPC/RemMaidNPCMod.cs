@@ -68,7 +68,7 @@ public sealed class RemMaidNPCMod : IMod
         ModHook.OnGenerateCustomerVeryLate -= OnGenerateCustomer;
         ModHook.OnGameLoadedNormal -= OnGameLoaded;
 
-        _harmony?.UnpatchSelf();
+        _harmony?.UnpatchAll(ModId);
         _harmony = null;
         _portraitSprite = null;
         _portraitTexture = null;
@@ -260,7 +260,7 @@ public sealed class RemMaidNPCMod : IMod
             displayName = L("npc.name"),
             spriteName = PortraitKey,
             clientFaction = StoreClient.FACTION_TOURIST,
-            clientIntent = (ClientIntent)2,
+            clientIntent = StoreClient.ClientIntent.SELL,
             reportDegradesFaction = false,
             cooldown = 0
         };
