@@ -90,3 +90,11 @@ jobs:
             echo "===== TYPE: $TYPE ====="
             /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -240 || true
           done
+
+      - name: Inspect inventory, future customer, food and drink APIs
+        shell: bash
+        run: |
+          for TYPE in FoodItemDirectory MiscItemDirectory ItemDirectory ItemSpawner PlayerStore StoreClientManager StoreClientListDict; do
+            echo "===== TYPE: $TYPE ====="
+            /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -260 || true
+          done
