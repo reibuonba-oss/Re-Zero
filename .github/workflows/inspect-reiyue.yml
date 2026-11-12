@@ -82,3 +82,11 @@ jobs:
             echo "===== TYPE: $TYPE ====="
             /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -180 || true
           done
+
+      - name: Inspect phone and paper APIs
+        shell: bash
+        run: |
+          for TYPE in PhoneClientList PhoneDialogList StorePhoneClient PhoneUIManager PhoneBookUIManager StorePhoneObject CustomUIManager PaperBookRegistry PaperItemData GameItem GameItemFunc ModManifest; do
+            echo "===== TYPE: $TYPE ====="
+            /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -240 || true
+          done
