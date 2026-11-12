@@ -139,3 +139,11 @@ jobs:
                           print("--",term,"--")
                           print(text[max(0,i-600):min(len(text),i+1800)])
           PY
+
+      - name: Inspect ClientIntent enum in supplied game assembly
+        shell: bash
+        run: |
+          echo "=== TYPES CONTAINING INTENT ==="
+          /tmp/ilspy/ilspycmd -l c /tmp/manager/Manager/Assembly-CSharp.dll | grep -i intent || true
+          echo "=== StoreClient clientIntent declaration and enum ==="
+          /tmp/ilspy/ilspycmd -t StoreClient /tmp/manager/Manager/Assembly-CSharp.dll | grep -n -C 8 -i 'clientIntent\|enum ' | head -180 || true
