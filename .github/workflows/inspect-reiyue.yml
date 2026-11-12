@@ -118,3 +118,24 @@ jobs:
             echo "===== TYPE: $TYPE ====="
             /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -260 || true
           done
+
+      - name: Inspect focused method bodies
+        shell: bash
+        run: |
+          /tmp/ilspy/ilspycmd -p -o /tmp/game-src /tmp/manager/Manager/Assembly-CSharp.dll
+          python3 - <<'PY'
+          import pathlib, re
+          root = pathlib.Path("/tmp/game-src")
+          names = ["LocHelper.cs","ContactElement.cs","PlayerStore.cs","StoreClient.cs","StoreClientManager.cs","ModHelper.cs","SpriteDict.cs","ModItemDirectory.cs","GameItem.cs"]
+          for name in names:
+              matches = list(root.rglob(name))
+              for f in matches[:1]:
+                  text = f.read_text(encoding="utf-8", errors="replace")
+                  print("\\n===== FOCUSED:", name, "=====")
+                  terms = ["GetLocalizedClientName","OnInit(","QueueFuturClient","CompleteClientCreation","AddClient(","TryAddDirectSellingItemToTable","SetSpriteAndShapeFromMod","SetValue(","spriteDictionary","GameItem Add(","SetModData"]
+                  for term in terms:
+                      i = text.find(term)
+                      if i >= 0:
+                          print("--",term,"--")
+                          print(text[max(0,i-600):min(len(text),i+1800)])
+          PY
