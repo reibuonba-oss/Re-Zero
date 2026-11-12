@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>rem_maid_npc</ID>
+  <Name>Rem — Maid Merchant</Name>
+  <Author>ReZero Mod Project</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Adds Rem, a maid merchant who sells drinks, food, and selected luxury goods. She is guaranteed to visit on Day 1, then has a 10% daily visit chance. Meet her to receive a business card and call her to arrange a next-day visit.</Description>
+  <GameVersions>
+    <Version>1.0.*</Version>
+  </GameVersions>
+  <Prerequisites />
+  <Assemblies>
+    <Assembly>RemMaidNPC.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Manifest>
