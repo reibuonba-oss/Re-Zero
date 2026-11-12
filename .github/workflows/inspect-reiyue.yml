@@ -98,3 +98,15 @@ jobs:
             echo "===== TYPE: $TYPE ====="
             /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -260 || true
           done
+
+      - name: Inspect mod loader API surface
+        shell: bash
+        run: |
+          echo "=== MOD TYPES ==="
+          /tmp/ilspy/ilspycmd -l c /tmp/manager/Manager/Assembly-CSharp.dll | grep -iE 'Mod|Phone|Inventory|Dialog' | head -160 || true
+          for TYPE in ModHelper ModHook ModLog IMod ModManifest LoadedMod Directory GameItemElement Dialogue PlayerInventory GameInventory; do
+            echo "===== TYPE: $TYPE ====="
+            /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -220 || true
+          done
+          echo "=== SAMPLE ASSEMBLY REFERENCES ==="
+          /tmp/ilspy/ilspycmd -il /tmp/rei-yue/ReiNPC.dll | grep -E '^\.assembly extern|^\s+\.ver' | head -100 || true
