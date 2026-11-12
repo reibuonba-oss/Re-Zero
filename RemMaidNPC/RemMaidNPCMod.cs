@@ -416,7 +416,6 @@ public sealed class RemMaidNPCMod : IMod
 
                 int nextDay = StoreStation.GetDayCounter() + 1;
                 ModHelper.SetModDataInt(ModId, "forced_visit_day", nextDay);
-                PlayerStore.Instance.QueueFuturClient(SellerId, 1);
             });
 
         return dialogue;
