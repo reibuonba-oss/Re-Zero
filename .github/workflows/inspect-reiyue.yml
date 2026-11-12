@@ -66,3 +66,19 @@ jobs:
                   if ext in {".dll",".exe",".csproj",".sln",".cs",".xml",".json",".md",".yml",".yaml",".txt"}:
                       print("MANAGER_ENTRY:", i.filename, i.file_size)
           PY
+
+      - name: Inspect game API types for the Rem NPC
+        shell: bash
+        run: |
+          mkdir -p /tmp/manager
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("Manager.zip") as z:
+              z.extractall("/tmp/manager")
+          PY
+          echo "=== MATCHING GAME TYPES ==="
+          /tmp/ilspy/ilspycmd -l c /tmp/manager/Manager/Assembly-CSharp.dll | grep -iE 'StoreStation|StoreClient|StoreClientManager|StoreClientListDict|PlayerStore|ModHook|SpriteDict|ModHelper|Phone|Holophone|ItemSpawner|ItemDirectory|CustomUI|Book|Paper' | head -120 || true
+          for TYPE in StoreStation StoreClient StoreClientManager StoreClientListDict PhoneManager CustomUIManager ItemSpawner; do
+            echo "===== TYPE: $TYPE ====="
+            /tmp/ilspy/ilspycmd -t "$TYPE" /tmp/manager/Manager/Assembly-CSharp.dll 2>/dev/null | head -180 || true
+          done
